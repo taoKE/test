@@ -5,7 +5,9 @@
 using namespace std;
 
 void run(){
-    Socket testSocket;
+    boost::asio::io_service io_service;
+    cout<<"In run"<<endl;
+    Socket testSocket(io_service);
     string buf;
     while(1) {
         cout<<"Waiting for msg..."<<endl;
@@ -22,7 +24,9 @@ void run(){
 }
 
 void msg(const string & addr, const string & msg) {
-    Socket testSocket;
+    cout<<"In msg"<<endl;
+    boost::asio::io_service io_service;
+    Socket testSocket(io_service);
     testSocket.send_to(addr, msg);
     string message;
     try{
@@ -38,10 +42,10 @@ void msg(const string & addr, const string & msg) {
 int main(int argc, char * argv[]) {
 
     if(argc >= 2) {
-        if(strcmp(argv[1], "run")) {
+        if(strcmp(argv[1], "run") == 0) {
             run();
             return 0;
-        } else if(strcmp(argv[1], "send")) {
+        } else if(strcmp(argv[1], "send") == 0) {
             msg(argc >= 3? string(argv[2]):string("127.0.0.1"), argc >= 4?string(argv[3]):string("Ping"));
             return 0;
         }
