@@ -3,6 +3,7 @@
 #include <boost/asio.hpp>
 #include <ctime>
 #include <string>
+#include <boost/lexical_cast.hpp>
 
 
 using boost::asio::ip::udp;
@@ -15,11 +16,13 @@ class Socket {
         udp::socket socket;
         boost::system::error_code error;
         udp::endpoint remote_endpoint;
+        int port;
         
     public:
-        Socket(boost::asio::io_service & _io_service, int port=60008):
+        Socket(boost::asio::io_service & _io_service, int _port):
             io_service(_io_service),
-            socket(io_service, udp::endpoint(udp::v4(), port))
+            socket(io_service, udp::endpoint(udp::v4(), _port)),
+            port(_port)
          {
 
             /*
@@ -32,6 +35,6 @@ class Socket {
             //delete socket;
         }
         void receive_from(string &);
-        void send_to(const string & addr, const string & message);
-        void send_to(const string &);
+        void send_to(const string & addr, const string & message, const int port);
+        void send_to(string );
 };
