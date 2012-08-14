@@ -5,9 +5,8 @@
 using namespace std;
 
 void run(){
-    boost::asio::io_service io_service;
     cout<<"In run"<<endl;
-    Socket testSocket(io_service, 60008);
+    Socket testSocket( 60008);
     string buf;
     while(1) {
         cout<<"Waiting for msg..."<<endl;
@@ -25,8 +24,7 @@ void run(){
 
 void msg(const string & addr, const string & msg, int port=60008) {
     cout<<"Sending message:"<<msg<<" to "<<addr<<endl;
-    boost::asio::io_service io_service;
-    Socket testSocket(io_service, 60009);;
+    Socket testSocket( 60009);;
     testSocket.send_to(addr, msg, port);
     string message;
     try{

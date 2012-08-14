@@ -1,0 +1,8 @@
+#pragma once
+#include <boost/thread/mutex.hpp>
+
+namespace tke {
+    class Threadpool: boost::noncopyable {
+        boost::mutex global
+    };
+};

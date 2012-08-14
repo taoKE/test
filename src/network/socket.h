@@ -4,23 +4,27 @@
 #include <ctime>
 #include <string>
 #include <boost/lexical_cast.hpp>
+#include <sstream>
 
 
 using boost::asio::ip::udp;
 using std::string;
 using std::cout;
 using std::endl;
+using std::stringstream;
+
 class Socket {
     private:
-        boost::asio::io_service& io_service;
+        boost::asio::io_service io_service;
         udp::socket socket;
         boost::system::error_code error;
         udp::endpoint remote_endpoint;
         int port;
+        char buf[1024];
         
     public:
-        Socket(boost::asio::io_service & _io_service, int _port):
-            io_service(_io_service),
+        Socket( int _port):
+            io_service(),
             socket(io_service, udp::endpoint(udp::v4(), _port)),
             port(_port)
          {
@@ -34,7 +38,7 @@ class Socket {
         ~Socket(){
             //delete socket;
         }
-        void receive_from(string &);
+        int receive_from(string &);
         void send_to(const string & addr, const string & message, const int port);
         void send_to(string );
 };

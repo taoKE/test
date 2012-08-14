@@ -1,18 +1,21 @@
 #include "socket.h"
 
-void Socket::receive_from(string & message){
+int Socket::receive_from(string & message){
     boost::system::error_code error;
-    boost::array<char, 1024> recv_buf;
-    int len = socket.receive_from(boost::asio::buffer(recv_buf), remote_endpoint, 0, error);
+    //boost::array<char, 1024> recv_buf;
+    int len = socket.receive_from(boost::asio::buffer(buf), remote_endpoint, 0, error);
 
     if(error && error != boost::asio::error::message_size)
         throw boost::system::system_error(error);
-    /*
+    
     cout<<"--------------------------------"<<endl;
-    std::cout.write(recv_buf.data(), len);
-    cout<<endl<<"Done receive_from:"<<message<<"| len="<<len<<endl;
+    //std::cout.write(buf, len - 1);
+    //cout<<buf;
+   ;
+    cout<<endl<<"Done receive_from:"<<"| len="<<len<<endl;
     cout<<"--------------------------------"<<endl;
-    */
+   
+    return len; 
 } 
 
 void Socket::send_to(const string & addr, const string & message, const int port_ ) {
