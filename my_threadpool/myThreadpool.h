@@ -20,13 +20,21 @@ namespace tke {
     };
     */
 
-    class Threadpool: boost::noncopyable {
+    class threadpool: boost::noncopyable {
         private:
             boost::mutex global;
-            queue<boost::thread> freeThreads;
-            queue<boost::thread> busyThreads;
+            boost::condition_variable cond;
+            queue<boost::thread > freeThreads;
+            queue<boost::thread > busyThreads;
+            int nFree, nBusy;
             priority_queue< boost::function<void> > pendingTasks;
 
         public:
+            threadpool(int _n = 100): nFree(_n), nBusy(0){
+                for(int i = 0; i < nFree; i++) {
+
+                }
+            }
+            
     };
 };
