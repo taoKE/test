@@ -5,15 +5,15 @@
 #include <boost/bind.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/utility.hpp>
-#include <vector>
 #include <queue>
-#include <queue>
+#include <deque>
 
 #include "peer_thread.h"
 
 using std::vector;
 using std::queue;
 using std::priority_queue;
+using std::deque;
 using boost::enable_shared_from_this;
 using boost::noncopyable;
 
@@ -31,8 +31,9 @@ namespace tke {
             //queue<boost::thread > freeThreads;
             //queue<boost::thread > busyThreads;
             int nBusy;
-            priority_queue< boost::function<void> > pendingTasks;
-            friend class peer_thread;
+            //priority_queue< boost::function0<void> > pendingTasks;
+            deque<boost::function0<void> > pendingTasks;
+            //friend class tke::peer_thread<threadpool>;
 
         public:
             threadpool(int _n = 100):nBusy(0){

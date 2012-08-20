@@ -25,8 +25,9 @@ void threadpool<Task>::execute_task() {
         while(pendingTasks.empty()){
             cond.wait(lock);
         }
-        task = pendingTasks.top();
-        pendingTasks.pop();
+        //task = pendingTasks.top();
+        task = pendingTasks.front();
+        pendingTasks.pop_front();
     }
     if(task) {
         task();
@@ -36,6 +37,6 @@ void threadpool<Task>::execute_task() {
 template<typename Task>
 void threadpool<Task>::schedule(Task const & task){
     boost::mutex::scoped_lock(global);
-    pendingTasks.push(task);
+    pendingTasks.push_back(task);
     cond.notify_one();
 }

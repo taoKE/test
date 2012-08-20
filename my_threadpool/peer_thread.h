@@ -26,4 +26,4 @@ namespace tke {
             void run();
             static void create_and_bind(shared_ptr<Pool> const & pool);
     };
-}
+};
