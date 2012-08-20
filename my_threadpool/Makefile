@@ -1,15 +1,15 @@
 CC=g++
 LIBS=-lboost_system -lpthread
-CFLAGS=-shared -fPIC $(LIBS) -I .
-OBJECTS=threadpool.o peer_thread.o
+CFLAGS= -c -g -Wall -fPIC $(LIBS) -I.
+#OBJECTS=threadpool.o peer_thread.o
 
 all:threadpool.so
 
 %.o:%.cpp
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) $(CFLAGS)  -o $@ $<
 
 threadpool.so:$(OBJECTS)
-	$(CC) -shared -Wl -fPIC $(OBJECTS) -o libthreadpool.so
+	$(CC) -g -shared -Wl,--export-dynamic -Wl,-soname,libthreadpool.so.1 -o libthreadpool.so $(OBJECTS)
 
 clean:
 	rm *.o *.so

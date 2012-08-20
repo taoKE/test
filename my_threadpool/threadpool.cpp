@@ -2,17 +2,18 @@
 
 using tke::threadpool;
 
+/*
 template<typename Task>
 threadpool<Task>::~threadpool() {
 }
-
+*/
 template<typename Task>
 size_t threadpool<Task>::size() const volatile{
     return nBusy;
 }
 
 template<typename Task>
-size_t threadpool<Task>::pending() const volatile {
+size_t tke::threadpool<Task>::pending() const volatile {
     return  pendingTasks.size();
 }
 
@@ -40,3 +41,5 @@ void threadpool<Task>::schedule(Task const & task){
     pendingTasks.push_back(task);
     cond.notify_one();
 }
+
+template class threadpool<peer_worker>;
