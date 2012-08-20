@@ -9,7 +9,7 @@ all:threadpool.so
 	$(CC) $(CFLAGS)  -o $@ $<
 
 threadpool.so:$(OBJECTS)
-	$(CC) -g -shared -Wl,--export-dynamic -Wl,-soname,libthreadpool.so.1 -o libthreadpool.so $(OBJECTS)
+	$(CC) -g -shared -Wl,--export-dynamic -Wl,-soname,libthreadpool.so -o libthreadpool.so $(OBJECTS)
 
 clean:
 	rm *.o *.so
