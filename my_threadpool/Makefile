@@ -17,4 +17,4 @@ test:libthreadpool.so
 	g++  -lboost_thread-mt -L. -lthreadpool -o test test.cpp
 
 clean:
-	rm *.so testPro
+	rm *.so test

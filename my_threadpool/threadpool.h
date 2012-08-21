@@ -41,10 +41,6 @@ namespace tke {
         public:
             typedef threadpool<Task> poolType;
             threadpool(int _n = 10):nBusy(10){
-                cout<<"Inside pool constructor"<<endl;
-                for(int i = 0; i < nBusy; i++) {
-                    peer_thread<poolType>::create_and_bind(this->shared_from_this());
-                }
             }   
             ~threadpool(){}
 
@@ -82,7 +78,15 @@ namespace tke {
                 cond.notify_one();
             }
 
-            void shutdown();        
+            void shutdown(){}
+
+            void resize(int n) {
+                cout<<"Inside pool resize"<<endl;
+                for(int i = 0; i < n; i++) {
+                    cout<<"Creating thread"<<endl;
+                    peer_thread<poolType>::create_and_bind(this->shared_from_this());
+                }
+            }     
 
     };
 
