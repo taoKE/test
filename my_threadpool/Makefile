@@ -1,15 +1,20 @@
 CC=g++
-LIBS=-lboost_system -lpthread
+LIBS=-lboost_system -lpthread -lboost_thread-mt
 CFLAGS= -c -g -Wall -fPIC $(LIBS) -I.
 #OBJECTS=threadpool.o peer_thread.o
 
-all:threadpool.so
+all:libthreadpool.so
+
+test:test
 
 %.o:%.cpp
 	$(CC) $(CFLAGS)  -o $@ $<
 
-threadpool.so:$(OBJECTS)
+libthreadpool.so:$(OBJECTS)
 	$(CC) -g -shared -Wl,--export-dynamic -Wl,-soname,libthreadpool.so -o libthreadpool.so $(OBJECTS)
 
+test:libthreadpool.so
+	g++  -lboost_thread-mt -L. -lthreadpool -o test test.cpp
+
 clean:
-	rm *.o *.so
+	rm *.so testPro
