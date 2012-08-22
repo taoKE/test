@@ -30,6 +30,7 @@ namespace tke {
         private:
             boost::mutex global;
             boost::condition_variable cond;
+            boost::condition_variable no_active_worker;
             //Looks like we dont really need a queue of threads
             //queue<boost::thread > freeThreads;
             //queue<boost::thread > busyThreads;
@@ -58,19 +59,27 @@ namespace tke {
                 {
                     boost::mutex::scoped_lock lock(global);
                     while(pendingTasks.empty()){
+                        no_active_worker.notify_one();
                         cond.wait(lock);
                     }
+                    cout<<"Awaken to work"<<endl;
                     //task = pendingTasks.top();
                     task = pendingTasks.front();
                     pendingTasks.pop_front();
-                    if(task) {
-                        task();
-                    }
                 }
 
+                if(task) {
+                    task();
+                }
                 return true;
             }
-            void wait(){}
+            bool wait(){
+                boost::mutex::scoped_lock lock(global);
+                while(!pendingTasks.empty()) {
+                    no_active_worker.wait(lock);
+                }
+                return true;
+            }
 
             void schedule(Task const & task){
                 boost::mutex::scoped_lock(global);

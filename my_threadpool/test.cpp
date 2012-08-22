@@ -6,7 +6,7 @@ using std::endl;
 
 void mySleep(){
     cout<<"Start sleeping..."<<endl;
-    sleep(4);
+    sleep(1);
     cout<<"Done sleeping"<<endl;
 }
 
@@ -16,10 +16,11 @@ int main() {
     shared_ptr<tke::threadpool<boost::function0<void> > > pool(new tke::threadpool<boost::function0<void> >());
     pool->resize(10);
 
-    for(int i = 0; i < 100; i++) {
+    for(int i = 0; i < 30; i++) {
         pool->schedule(&mySleep);
     }
-
+    
+    pool->wait();
     return 0;
 }
 
