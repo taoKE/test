@@ -9,13 +9,14 @@ using std::endl;
 
 
 namespace tkd{
+
     /*
      *Policy needs to implement operator <, except for FIFO
      */
-    template<typename Policy, typename QueueType>
-    class Scheduler{
+    template<typename Policy>
+    class Priority_Scheduler{
         private:
-            QueueType< Policy> pendingTasks;
+            priority_queue<Policy> pendingTasks;
             
         public:
             Schedule_policy(){};
@@ -44,12 +45,29 @@ namespace tkd{
     };
 
 
+    template<typenmae task_func = boost::function0<void> >
+    class Policy {
+        private:
+            task_func task;
+        public:
+            Policy(task_func const & _task):task(_task){}
+            task_func & getTask(){
+                return task;
+            }
+    };
+
     //When using this policy, Scheduler needs queue
     template <typename task_func = boost::function0<void> >
-    class FiFoPolicy {
+    class Fifo_Policy : Policy<task_func>{
         private:
-            task_func task;            
+            queue<task_func> pendingTask;
         public:
-            FifoPolicy(Task const & _task):task(_task){}
+            FifoPolicy(Task const & _task):task(_task){
+                type = "fifo";
+            }
+
+            string getType() const {
+                return type;
+            }
     };
 };
