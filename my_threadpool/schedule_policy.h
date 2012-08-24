@@ -49,25 +49,37 @@ namespace tkd{
     class Policy {
         private:
             task_func task;
+   
         public:
             Policy(task_func const & _task):task(_task){}
             task_func & getTask(){
                 return task;
             }
+
+            virtual bool operator < (Policy<task_func> const & a, Policy<task_func> const & b) = 0;
     };
 
-    //When using this policy, Scheduler needs queue
+    //Simulating Fifo by automatically set level
     template <typename task_func = boost::function0<void> >
     class Fifo_Policy : Policy<task_func>{
         private:
             queue<task_func> pendingTask;
+            static int level;
         public:
             FifoPolicy(Task const & _task):task(_task){
-                type = "fifo";
+                //Dont let level goes REALLY big
+                level = ((level+ 1) % 100);
             }
 
-            string getType() const {
-                return type;
+            int getLevel(){
+                return level;
+            }
+
+            bool operator < (Policy<task_func> const & a, Policy<task_func> const & b) {
+                //level 0 is biggest. This is a heck to implement FIFO with priority_queue
+                //There may be some better way.
+                if(level == 0) return false;
+                return a.getLevel() < b.getLevel();
             }
     };
 };

@@ -16,8 +16,10 @@ int main() {
     shared_ptr<tke::threadpool<boost::function0<void> > > pool(new tke::threadpool<boost::function0<void> >());
     pool->resize(10);
 
+    Fifo_Policy::level = 0;
     for(int i = 0; i < 30; i++) {
-        pool->schedule(&mySleep);
+        Fifo_Policy fifo(&mySleep)
+        pool->schedule(fifo);
     }
     
     pool->wait();

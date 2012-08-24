@@ -10,6 +10,7 @@
 #include <iostream>
 
 #include "peer_thread.h"
+#include "schedule_policy.h"
 
 using std::cout;
 using std::endl;
@@ -19,10 +20,12 @@ using std::priority_queue;
 using std::deque;
 using boost::enable_shared_from_this;
 using boost::noncopyable;
+using tke::Schedule_policy;
 
 namespace tke {
 
-    template<typename Task>
+    template<typename Task,  
+            typename Policy >
     class threadpool:
             public enable_shared_from_this<threadpool<Task> >,
             private noncopyable
@@ -31,12 +34,12 @@ namespace tke {
             boost::mutex global;
             boost::condition_variable cond;
             boost::condition_variable no_active_worker;
-            //Looks like we dont really need a queue of threads
-            //queue<boost::thread > freeThreads;
-            //queue<boost::thread > busyThreads;
+            
             int nBusy;
             //priority_queue< boost::function0<void> > pendingTasks;
             deque<boost::function0<void> > pendingTasks;
+
+            Priority_Scheduler<Policy> scheduler;
             //friend class tke::peer_thread<threadpool>;
 
         public:
@@ -51,21 +54,25 @@ namespace tke {
             }
 
             size_t pending() const volatile{
-                return  pendingTasks.size();
+                //return  pendingTasks.size();
+                return scheduler.size();
             }
             bool execute_task(){
                 boost::function0<void> task;
                 cout<<"Inside execute_task"<<endl;
                 {
                     boost::mutex::scoped_lock lock(global);
-                    while(pendingTasks.empty()){
+                    //while(pendingTasks.empty()){
+                    while(scheduler.empty()) {
                         no_active_worker.notify_one();
                         cond.wait(lock);
                     }
                     cout<<"Awaken to work"<<endl;
-                    //task = pendingTasks.top();
-                    task = pendingTasks.front();
-                    pendingTasks.pop_front();
+
+                    //task = pendingTasks.front();
+                    //pendingTasks.pop_front();
+                    task = scheduler.top();
+                    scheduer.pop();
                 }
 
                 if(task) {
@@ -73,9 +80,11 @@ namespace tke {
                 }
                 return true;
             }
+
             bool wait(){
                 boost::mutex::scoped_lock lock(global);
-                while(!pendingTasks.empty()) {
+                //while(!pendingTasks.empty()) {
+                while(!scheduler.empty()) {
                     no_active_worker.wait(lock);
                 }
                 return true;
@@ -83,7 +92,8 @@ namespace tke {
 
             void schedule(Task const & task){
                 boost::mutex::scoped_lock(global);
-                pendingTasks.push_back(task);
+                //pendingTasks.push_back(task);
+                schedule_policy.push(task);
                 cond.notify_one();
             }
 
