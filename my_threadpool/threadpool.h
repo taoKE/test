@@ -89,9 +89,17 @@ namespace tke {
                 return true;
             }
 
+            /*
             void schedule(Task const & task){
                 boost::mutex::scoped_lock(global);
                 //pendingTasks.push_back(task);
+                scheduler.push(task);
+                cond.notify_one();
+            }
+            */
+
+            void schedule(Policy<Task> const & task) {
+                boost::mutex::scoped_lock(global);
                 scheduler.push(task);
                 cond.notify_one();
             }

@@ -11,7 +11,8 @@ void mySleep(){
 }
 
 //static field needs to be declared
-template<> int tke::Fifo_Policy<boost::function0<void> >::level = 0;
+//template<> int tke::Fifo_Policy<boost::function0<void> >::level = 0;
+
 int main() {
 
     //pool has to be constructed with shared_ptr constructor so as to use shared_from_this function. Otherwise, runtime exception.
@@ -20,9 +21,9 @@ int main() {
     pool->resize(10);
 
 
-    tke::Fifo_Policy<boost::function0<void> >::level += 1;
+    //tke::Fifo_Policy<boost::function0<void> >::level += 1;
     for(int i = 0; i < 30; i++) {
-        tke::Fifo_Policy<boost::function0<void> > fifo(&mySleep);
+        tke::Fifo_Policy<boost::function0<void> > fifo(&mySleep, i);
         pool->schedule(fifo);
     }
     

@@ -17,9 +17,11 @@ namespace tke{
                typename task_func>
     class Priority_Scheduler{
         private:
+            typedef Policy<task_func> policy;
+            //Using the default less comparison, which will use Policy operator <, 
+            //and the highest priority will be the top.
             priority_queue<Policy<task_func> > pendingTasks;
             
-            typedef Policy<task_func> policy;
         public:
             Priority_Scheduler(){};
 
@@ -65,6 +67,7 @@ namespace tke{
 
             //operator () will be the same for everyone
             bool operator ()(){
+                cout<<"executing priority:"<<getPriority() << endl;
                 task();
             }
 
@@ -72,17 +75,18 @@ namespace tke{
             //the child classes will be abstract class? 
             //TODO: try it out
             virtual bool operator < ( Policy<task_func> const & b) const{};
+            virtual bool operator > ( Policy<task_func> const & b) const = 0;
     };
 
     //Simulating Fifo by automatically set level
     template <typename task_func = boost::function0<void> >
     class Fifo_Policy : public Policy<task_func>{
         public:
-            static int level;
+            int level;
         public:
-            Fifo_Policy(task_func const & _task):Policy<task_func>(_task){
+            Fifo_Policy(task_func const & _task, int _level):Policy<task_func>(_task){
                 //Dont let level goes REALLY big
-                level = ((level+ 1) % 100);
+                level = _level + 1;
             }
 
             int getPriority() const{
@@ -90,10 +94,13 @@ namespace tke{
             }
 
             bool operator < ( Policy<task_func> const &  b) const {
-                //level 0 is biggest. This is a heck to implement FIFO with priority_queue
-                //There may be some better way.
-                if(level == 0) return false;
-                return level < b.getPriority();
+                //Normally, it should return level < b.getPriority(), to be consistent with operator < semantics.
+                //But here, we are implemented FIFO, need lower priority first..
+                return level >  b.getPriority();
+            }
+
+            bool operator > (Policy<task_func> const & b) const {
+                return level > b.getPriority();
             }
     };
 };
