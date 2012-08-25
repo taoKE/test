@@ -20,14 +20,13 @@ using std::priority_queue;
 using std::deque;
 using boost::enable_shared_from_this;
 using boost::noncopyable;
-using tke::Schedule_policy;
 
 namespace tke {
 
     template<typename Task,  
-            typename Policy >
+            template<typename> class Policy >
     class threadpool:
-            public enable_shared_from_this<threadpool<Task> >,
+            public enable_shared_from_this<threadpool<Task, Policy> >,
             private noncopyable
     {
         private:
@@ -39,11 +38,11 @@ namespace tke {
             //priority_queue< boost::function0<void> > pendingTasks;
             deque<boost::function0<void> > pendingTasks;
 
-            Priority_Scheduler<Policy> scheduler;
+            tke::Priority_Scheduler<Policy, Task > scheduler;
             //friend class tke::peer_thread<threadpool>;
 
         public:
-            typedef threadpool<Task> poolType;
+            typedef threadpool<Task, Policy> poolType;
             threadpool(int _n = 10):nBusy(10){
             }   
             ~threadpool(){}
@@ -53,7 +52,7 @@ namespace tke {
                 return nBusy;
             }
 
-            size_t pending() const volatile{
+            size_t pending() {
                 //return  pendingTasks.size();
                 return scheduler.size();
             }
@@ -72,7 +71,7 @@ namespace tke {
                     //task = pendingTasks.front();
                     //pendingTasks.pop_front();
                     task = scheduler.top();
-                    scheduer.pop();
+                    scheduler.pop();
                 }
 
                 if(task) {
@@ -93,7 +92,7 @@ namespace tke {
             void schedule(Task const & task){
                 boost::mutex::scoped_lock(global);
                 //pendingTasks.push_back(task);
-                schedule_policy.push(task);
+                scheduler.push(task);
                 cond.notify_one();
             }
 

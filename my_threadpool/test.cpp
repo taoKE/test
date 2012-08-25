@@ -10,15 +10,18 @@ void mySleep(){
     cout<<"Done sleeping"<<endl;
 }
 
+template<> int tke::Fifo_Policy<boost::function0<void> >::level = 0;
 int main() {
 
     //pool has to be constructed with shared_ptr constructor so as to use shared_from_this function. Otherwise, runtime exception.
-    shared_ptr<tke::threadpool<boost::function0<void> > > pool(new tke::threadpool<boost::function0<void> >());
+    shared_ptr<tke::threadpool<boost::function0<void>, tke::Fifo_Policy > > pool(new tke::threadpool<boost::function0<void>, tke::Fifo_Policy >());
+
     pool->resize(10);
 
-    Fifo_Policy::level = 0;
+
+    tke::Fifo_Policy<boost::function0<void> >::level += 1;
     for(int i = 0; i < 30; i++) {
-        Fifo_Policy fifo(&mySleep)
+        tke::Fifo_Policy<boost::function0<void> > fifo(&mySleep);
         pool->schedule(fifo);
     }
     

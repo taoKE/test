@@ -3,25 +3,27 @@
 #include <algorithm>
 #include <iostream>
 
-using std::queue;
+using std::priority_queue;
 using std::cout;
 using std::endl;
 
 
-namespace tkd{
+namespace tke{
 
     /*
      *Policy needs to implement operator <, except for FIFO
      */
-    template<typename Policy>
+    template< template<typename> class Policy, 
+               typename task_func>
     class Priority_Scheduler{
         private:
-            priority_queue<Policy> pendingTasks;
+            priority_queue<Policy<task_func> > pendingTasks;
             
+            typedef Policy<task_func> policy;
         public:
-            Schedule_policy(){};
+            Priority_Scheduler(){};
 
-            void push (Policy &  element){
+            void push (policy const &  element){
                 pendingTasks.push(element);
             }
 
@@ -30,7 +32,7 @@ namespace tkd{
                 return pendingTasks.size();
             }
 
-            elementType & top() const {
+            policy & top() const {
                 pendingTasks.top();
             }
     
@@ -38,14 +40,14 @@ namespace tkd{
                 pendingTasks.pop();
             }
 
-            void empty() const {
+            bool empty() {
                 return pendingTasks.empty();
             }
             
     };
 
 
-    template<typenmae task_func = boost::function0<void> >
+    template<typename task_func = boost::function0<void> >
     class Policy {
         private:
             task_func task;
@@ -56,30 +58,35 @@ namespace tkd{
                 return task;
             }
 
-            virtual bool operator < (Policy<task_func> const & a, Policy<task_func> const & b) = 0;
+            virtual int getPriority()const {} 
+
+            bool operator ()(){
+                task();
+            }
+
+            virtual bool operator < ( Policy<task_func> const & b) const{};
     };
 
     //Simulating Fifo by automatically set level
     template <typename task_func = boost::function0<void> >
-    class Fifo_Policy : Policy<task_func>{
-        private:
-            queue<task_func> pendingTask;
+    class Fifo_Policy : public Policy<task_func>{
+        public:
             static int level;
         public:
-            FifoPolicy(Task const & _task):task(_task){
+            Fifo_Policy(task_func const & _task):Policy<task_func>(_task){
                 //Dont let level goes REALLY big
                 level = ((level+ 1) % 100);
             }
 
-            int getLevel(){
+            int getPriority() const{
                 return level;
             }
 
-            bool operator < (Policy<task_func> const & a, Policy<task_func> const & b) {
+            bool operator < ( Policy<task_func> const &  b) const {
                 //level 0 is biggest. This is a heck to implement FIFO with priority_queue
                 //There may be some better way.
                 if(level == 0) return false;
-                return a.getLevel() < b.getLevel();
+                return level < b.getPriority();
             }
     };
 };
