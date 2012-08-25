@@ -10,6 +10,7 @@ void mySleep(){
     cout<<"Done sleeping"<<endl;
 }
 
+//static field needs to be declared
 template<> int tke::Fifo_Policy<boost::function0<void> >::level = 0;
 int main() {
 

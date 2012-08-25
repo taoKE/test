@@ -58,12 +58,19 @@ namespace tke{
                 return task;
             }
 
+            //This function should be pure virtual function. 
+            //This function is used by operator <, which is a const function, 
+            //that's why it is also a const function. Otherwise, compilation error
             virtual int getPriority()const {} 
 
+            //operator () will be the same for everyone
             bool operator ()(){
                 task();
             }
 
+            //Looks like when this function is declared as pure virtual function, 
+            //the child classes will be abstract class? 
+            //TODO: try it out
             virtual bool operator < ( Policy<task_func> const & b) const{};
     };
 
