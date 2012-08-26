@@ -6,7 +6,7 @@ using std::endl;
 
 void mySleep(){
     cout<<"Start sleeping..."<<endl;
-    sleep(20);
+    sleep(1);
     cout<<"Done sleeping"<<endl;
 }
 
@@ -20,14 +20,24 @@ int main() {
 
     pool->resize(10);
 
+   tke::Priority_Scheduler<tke::Fifo_Policy, boost::function0<void> > test_scheduler;
 
     //tke::Fifo_Policy<boost::function0<void> >::level += 1;
     for(int i = 0; i < 30; i++) {
         tke::Fifo_Policy<boost::function0<void> > fifo(&mySleep, i);
+        tke::Fifo_Policy<boost::function0<void> > fifo_test(&mySleep, i);
         pool->schedule(fifo);
+        test_scheduler.push(fifo_test);
     }
+
     
     pool->wait();
+    //testing if the scheduler sort the policy in the right order with priority queue
+    while(!test_scheduler.empty()){
+        tke::Policy<boost::function0<void> > task = test_scheduler.top();
+        test_scheduler.pop();
+        cout<<task.getPriority()<<endl;
+    }
     return 0;
 }
 
