@@ -77,6 +77,7 @@ namespace tke {
                 if(task) {
                     task();
                 }
+                
                 return true;
             }
 

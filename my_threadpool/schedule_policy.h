@@ -66,7 +66,9 @@ namespace tke{
             //This function should be pure virtual function. 
             //This function is used by operator <, which is a const function, 
             //that's why it is also a const function. Otherwise, compilation error
-            virtual int getPriority()const {} 
+            virtual int getPriority()const {
+                return level;
+            } 
 
             int getLevel() const {
                 return level;
@@ -81,6 +83,10 @@ namespace tke{
             //Looks like when this function is declared as pure virtual function, 
             //the child classes will be abstract class? 
             //TODO: try it out
+            //
+            //OK, just found that Fifo_Policy has to implement these operators 
+            //for the scheduler queue work properly...
+            //Not quite sure why yet.
             virtual bool operator < ( Policy<task_func> const & b) const{
                 getPriority() < b.getPriority();
             }
@@ -102,17 +108,17 @@ namespace tke{
                 return this->level;
             }
             
-            /* going to use the default implementation of base Policy
+            /* going to use the default implementation of base Policy*/
             bool operator < ( Policy<task_func> const &  b) const {
                 //Normally, it should return level < b.getPriority(), to be consistent with operator < semantics.
                 //But here, we are implemented FIFO, need lower priority first..
-                return level >  b.getPriority();
+                return this->level >  b.getPriority();
             }
             
             bool operator > (Policy<task_func> const & b) const {
-                return level > b.getPriority();
+                return this->level > b.getPriority();
             }
-            */
+            
     };
 
     //One customized policy
