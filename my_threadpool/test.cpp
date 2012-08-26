@@ -6,7 +6,7 @@ using std::endl;
 
 void mySleep(){
     cout<<"Start sleeping..."<<endl;
-    sleep(1);
+    sleep(20);
     cout<<"Done sleeping"<<endl;
 }
 
