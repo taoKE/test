@@ -1,4 +1,6 @@
-#include <iostream>
+#include<iostream>
+#include <ctime>
+#include <cstdlib>
 #include "threadpool.h"
 
 using std::cout;
@@ -38,6 +40,22 @@ int main() {
         test_scheduler.pop();
         cout<<task.getPriority()<<endl;
     }
+
+    /////////////Testing Another_Policy 
+    cout<<"----------------------------Testing Another_Policy---------------------"<<endl;
+    tke::Priority_Scheduler<tke::Another_Policy, boost::function0<void> > test_another_scheduler;
+    srand( time(NULL) );
+    for(int i = 0; i < 100; i++) {
+        tke::Another_Policy<boost::function0<void> > test_policy(&mySleep, i % 10, rand(), rand());
+        test_another_scheduler.push(test_policy);
+    }
+
+    while(!test_another_scheduler.empty()){
+        tke::Policy<boost::function0<void> > task = test_another_scheduler.top();
+        test_another_scheduler.pop();
+        cout<<task.getLevel() << ":" << task.getPriority() <<endl;
+    }
+
     return 0;
 }
 
