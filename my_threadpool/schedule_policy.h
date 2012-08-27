@@ -144,10 +144,11 @@ namespace tke{
             //Should actually make operator > working, but 
             //std::greater<Policy> is not working.
             bool operator < (Policy<task_func> const & b) const {
+                bool res = this->getPriority() > b.getPriority();
                 if(this->getLevel() == b.getLevel()) {
-                    return this->getPriority() > b.getPriority();
+                    return res;
                 }
-                return this->getLevel() > b.getLevel();
+                return res;
             }
 
             bool operator > (Policy<task_func> const & b) const {

@@ -46,12 +46,15 @@ int main() {
     tke::Priority_Scheduler<tke::Another_Policy, boost::function0<void> > test_another_scheduler;
     srand( time(NULL) );
     for(int i = 0; i < 100; i++) {
-        tke::Another_Policy<boost::function0<void> > test_policy(&mySleep, i % 10, rand(), rand());
+        int weight = rand() % 100000;
+        int cost = rand() % 1000000;
+        cout<<weight<<" : "<<cost<<endl;
+        tke::Another_Policy<boost::function0<void> > test_policy(&mySleep, i % 10, weight, cost);
         test_another_scheduler.push(test_policy);
     }
 
     while(!test_another_scheduler.empty()){
-        tke::Policy<boost::function0<void> > task = test_another_scheduler.top();
+        tke::Another_Policy<boost::function0<void> > task = test_another_scheduler.top();
         test_another_scheduler.pop();
         cout<<task.getLevel() << ":" << task.getPriority() <<endl;
     }
