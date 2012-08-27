@@ -141,6 +141,13 @@ namespace tke{
                 return weight + cost;
             }
 
+            bool operator < (Policy<task_func> const & b) const {
+                if(this->getLevel() == b.getLevel()) {
+                    return this->getPriority() < b.getPriority();
+                }
+                return this->getLevel() < b.getLevel();
+            }
+
             bool operator > (Policy<task_func> const & b) const {
                 if(this->getLevel() == b.getLevel()) {
                     return this->getPriority() > b.getPriority();
