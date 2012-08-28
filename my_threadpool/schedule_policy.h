@@ -2,10 +2,14 @@
 #include <queue>
 #include <algorithm>
 #include <iostream>
+#include <vector>
+#include <map>
 
 using std::priority_queue;
 using std::cout;
 using std::endl;
+using std::vector;
+using std::map;
 
 
 namespace tke{
@@ -21,7 +25,11 @@ namespace tke{
             //Using the default less comparison, which will use Policy operator <, 
             //and the highest priority will be the top.
             priority_queue<Policy<task_func>/*, std::greater<Policy<task_func> >*/ > pendingTasks;
-            
+           
+            //this is a map from level to the queue of tasks with same level.
+            //TODO: add logic to avoid starving with this map.
+            map<int, priority_queue<Policy<task_func> > > queues;
+
         public:
             Priority_Scheduler(){};
 
