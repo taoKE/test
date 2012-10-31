@@ -14,6 +14,25 @@ void MDistor::insert(string  ns, BSONObj & p) {
     dbConn->insert(ns, p);
 }
 
+void MDistor::setKey(string ns, BSONObj & keyAndRange ) {
+    //TODO: is it necessary to redeploy existing data if the key changes?
+    string db = getDBFromNS(ns);
+    string chunkColl = db + MDIS::CHUNKS; 
+
+    BSONObjBuilder p;
+    //it will always add the first chunk into the chunk collection.
+    //later insert will figure out the range and corresponding worker 
+    //from the record in chunk collection
+    p.append("ns", ns);
+    p.append("range", keyAndRange["range"]);
+    int start = 0; 
+    int end = start + 100;
+    p.append("key", BSON("min" << start <<"max" << end));
+
+    dbConn->insert(chunkColl, p.obj());
+
+}
+
 void MDistor::addWorker(string host) {
     BSONObjBuilder p;
     int count = workers.size();
