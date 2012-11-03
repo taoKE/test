@@ -15,7 +15,7 @@ namespace MDIS {
     const static string WORKERS = "mdistor.workers";
 
     //chunk info will be stored as a db collection in mdistor
-    const static string CHUNKS = ".chunks";
+    const static string CHUNKS = "mdistor.";
 
     class MDistor {
         private:
