@@ -10,8 +10,15 @@ int main() {
     MDistor distor(&c);
 
     distor.connect("localhost");
-    BSONObj p = BSON("name" << "test" << "key" << "age");
-    distor.insert(string("mdistor.chunks_test"), p);
+    BSONObj p = BSON("name" << "test" << "key" << "age" << "id" << 10);
+    distor.addWorker("localhost:10000");
+    distor.addWorker("localhost:10001");
+    BSONObjBuilder key;
+    key.append("key", "test_db.test_coll.id");
+    key.append("range", 100);
+    BSONObj bKey = key.obj();
+    distor.setKey("test_db.test_coll", bKey);
+    distor.insert(string("test_db.test_coll"), p);
 
     return 0;
 }
