@@ -14,7 +14,7 @@ void MDistor::connect(string  host) {
 
 void MDistor::insert(string  ns, BSONObj & p) {
     //dbConn->insert(ns, p);
-    string db = getDBFromNS(ns);
+    string db = ns;
     string chunkColl = MDIS::CHUNKS + db;
     
     //We need to key here to decide which chunk this record goes to
@@ -25,11 +25,12 @@ void MDistor::insert(string  ns, BSONObj & p) {
     auto_ptr<DBClientCursor> keyCursor = dbConn->query(chunkColl, key.obj());
     cout<<"Done querying chunkColl"<<endl;
     
-    string keyS = keyCursor->next().getStringField("key");;
+    //string keyS = keyCursor->next().getStringField("key");;
 
     cout<<"Getting worker connection"<<endl;
-    shared_ptr<DBClientConnection> worker = getWorkerConnection(keyS,  p); 
-    
+    //shared_ptr<DBClientConnection> worker = getWorkerConnection(keyS,  p); 
+    shared_ptr<DBClientConnection> worker = getWorkerConnection(defaultKeys[ns], p);
+
     cout << "Attempting to insert "<< ns << endl;
     worker->insert(ns, p);
 }
@@ -37,7 +38,7 @@ void MDistor::insert(string  ns, BSONObj & p) {
 void MDistor::setKey(string ns, BSONObj & keyAndRange ) {
     //TODO: is it necessary to redeploy existing data if the key changes?
     cout<<"Starting to set keys"<<endl;
-    string db = getDBFromNS(ns);
+    string db = ns;
     string chunkColl = MDIS::CHUNKS + db; 
     cout<<" is : "<<chunkColl<<endl;
     BSONObjBuilder chunk, key;
@@ -65,6 +66,9 @@ void MDistor::setKey(string ns, BSONObj & keyAndRange ) {
     dbConn->insert(chunkColl, key.obj());
     cout<<"Done all "<<endl;
 
+    string coll = ns.substr(0,ns.rfind('.'));
+    cout<<"--------"<<coll<<"----------------"<<endl;
+    defaultKeys[coll] = ns;
 }
 
 void MDistor::addWorker(string host) {
@@ -112,10 +116,24 @@ void MDistor::init() {
  *  cursor: cursor for the key query.
  */
 shared_ptr<DBClientConnection> MDistor::getWorkerConnection(string key, BSONObj & p )  {
-    auto_ptr<DBClientCursor>  cursor = dbConn->query(MDIS::CHUNKS, BSON("key.min" << BSON("$lte" << p.getStringField(key.c_str())) << "key.max" << BSON("$gte" << p.getStringField(key.c_str()))));
+    cout<<"getworker, key is:"<<key<<endl;
+    string _key = key.substr(key.rfind('.')+1);
+    cout<<"_key is :"<<_key<<"|"<<endl;
+    cout<<"p is :"<<p.toString()<<endl;
+    string  field = p.getStringField("id");
+    cout<<"getWorker, field is :"<<field<<endl;
+    //auto_ptr<DBClientCursor>  cursor = dbConn->query(MDIS::CHUNKS, BSON("key.min" << BSON("$lte" << p.getStringField(key.c_str())) << "key.max" << BSON("$gte" << p.getStringField(key.c_str()))));
+    auto_ptr<DBClientCursor> cursor = dbConn->query(MDIS::CHUNKS, QUERY("key.max"<<GT<<field));
+
+    string mdistor_ns = MDIS::CHUNKS + key;
+    cout << "mdistor_ns:"<<mdistor_ns <<endl;
+    //auto_ptr<DBClientCursor> testCur = dbConn->query(mdistor_ns, QUERY("key.max"<<"100"));
+    auto_ptr<DBClientCursor> testCur = dbConn->query(mdistor_ns, QUERY("key.min" <<LT<< 10));
+    cout<<"testCur is : "<<testCur->next().getStringField("host");
 
     if(cursor->more()) {
-        string host = cursor->next()["host"];
+        cout<<"trying to get host"<<endl;
+        string host = cursor->next().getStringField("host");
         return workers[host];
     }
 

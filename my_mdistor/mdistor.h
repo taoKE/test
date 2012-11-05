@@ -19,12 +19,13 @@ namespace MDIS {
     const static string KEYTYPE = "key";
 
     //chunk info will be stored as a db collection in mdistor
-    const static string CHUNKS = "mdistor";
+    const static string CHUNKS = "mdistor.";
 
     class MDistor {
         private:
             DBClientConnection * dbConn;
             map<string, shared_ptr<DBClientConnection> > workers;//cached all the connections to the workers.
+            map<string, string> defaultKeys; //cached the default keys for dbs
             //TODO: temp solution to getAvailableWorker
             static int tempCount; 
 
