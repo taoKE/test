@@ -1,5 +1,6 @@
 #include "mdistor.h"
 #include <iostream>
+#include <mongo/bson/bson.h>
 
 using namespace std;
 
@@ -120,10 +121,10 @@ shared_ptr<DBClientConnection> MDistor::getWorkerConnection(string key, BSONObj 
     string _key = key.substr(key.rfind('.')+1);
     cout<<"_key is :"<<_key<<"|"<<endl;
     cout<<"p is :"<<p.toString()<<endl;
-    string  field = p.getStringField("id");
-    cout<<"getWorker, field is :"<<field<<endl;
+    mongo::BSONElement  field = p.getField("id");
+    cout<<"getWorker, field is :"<<field.Int()<<endl;
     //auto_ptr<DBClientCursor>  cursor = dbConn->query(MDIS::CHUNKS, BSON("key.min" << BSON("$lte" << p.getStringField(key.c_str())) << "key.max" << BSON("$gte" << p.getStringField(key.c_str()))));
-    auto_ptr<DBClientCursor> cursor = dbConn->query(MDIS::CHUNKS, QUERY("key.max"<<GT<<field));
+    auto_ptr<DBClientCursor> cursor = dbConn->query(MDIS::CHUNKS, QUERY("key.max"<<GT<<field.Int()));
 
     string mdistor_ns = MDIS::CHUNKS + key;
     cout << "mdistor_ns:"<<mdistor_ns <<endl;

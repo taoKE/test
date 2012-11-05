@@ -10,7 +10,7 @@ int main() {
     MDistor distor(&c);
 
     distor.connect("localhost");
-    BSONObj p = BSON("name" << "test" << "key" << "age" << "id" << "10");
+    BSONObj p = BSON("name" << "test" << "key" << "age" << "id" << 10);
     distor.addWorker("localhost:10000");
     distor.addWorker("localhost:10001");
     BSONObjBuilder key;
@@ -19,7 +19,7 @@ int main() {
     BSONObj bKey = key.obj();
     distor.setKey("test_db.test_coll.id", bKey);
 
-    BSONObj p2 = BSON("name" << "test" << "key" << "age" << "id" << "110");
+    BSONObj p2 = BSON("name" << "test" << "key" << "age" << "id" << 110);
     distor.insert(string("test_db.test_coll"), p);
     distor.insert(string("test_db.test_coll"), p2);
 
