@@ -12,10 +12,13 @@ bool check(string input) {
     cout<<"size = "<<size<<endl;
     for(int  i  =0; i < size; i ++){
         if(already.find(input[i]) != string::npos){
-            cout<<"right now: already is :"<<already<<"; char is "<<input[i]<<endl;
+            cout<<"right now: already is :"<<already<<";i= "<<i<<" char is "<<input[i]<<endl;
             return false;
         }
-        else already.append(&input[i]);
+        else{
+            char temp = input[i];
+            already.append(&temp);
+        }
     }
     return true;
 }
