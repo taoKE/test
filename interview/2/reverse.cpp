@@ -42,5 +42,5 @@ int main(){
     cout<<head->getValue()<<endl;
 
     return 0;
-    
+     
 }
