@@ -27,6 +27,11 @@ class LinkedListNode {
         LinkedListNode<T> * setNext(LinkedListNode<T>* n) {
             next = n;
         }
+
+        void setValue(T s) {
+            value = s;
+
+        }
 };
 
 template<class T>
