@@ -9,6 +9,7 @@
 
 using namespace mongo;
 using boost::shared_ptr;
+using namespace std;
 
 namespace MDIS {
 
@@ -21,6 +22,48 @@ namespace MDIS {
     //chunk info will be stored as a db collection in mdistor
     const static string CHUNKS = "mdistor.";
 
+    class ChunkInfo {
+        private:
+            int range;
+            string key;
+            int current_max;
+
+        public:
+            ChunkInfo(string k, int r) : key(k), range(r){}
+            void setKey(string k) {
+                key = k;
+            }
+
+            /**This is required by map to create a new instance
+             */
+            ChunkInfo(){
+                key = "";
+                range = 0;
+                current_max = 0;
+            }
+
+            void setRange(int r) {
+                range = r;
+            }
+
+            void setCurrentMax(int max) {
+                current_max = max;
+            }
+
+            int getRange() {
+                return range;
+            }
+
+            int getCurrentMax() {
+                return current_max;
+            }
+
+            string getKey() {
+                return key;
+            }
+
+    };
+
     class MDistor {
         private:
             DBClientConnection * dbConn;
@@ -28,6 +71,10 @@ namespace MDIS {
             map<string, string> defaultKeys; //cached the default keys for dbs
             //TODO: temp solution to getAvailableWorker
             static int tempCount; 
+            
+            map<string, ChunkInfo> chunkInfos;
+
+            void addChunk(string ns, int range);
 
         public:
             MDistor(DBClientConnection * _dbConn): dbConn(_dbConn) {}
