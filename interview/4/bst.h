@@ -7,7 +7,7 @@ class BSTNode{
         int value;
 
     public:
-        BSTNode(int _value, BSTNode * l = NULL, BSTNode * r = NULL) left(l), right(r), value(_value){}
+        BSTNode(int _value, BSTNode * l = NULL, BSTNode * r = NULL): left(l), right(r), value(_value){}
 
 /*        
         void setLeft(BSTNode * l) {
@@ -28,7 +28,17 @@ class BSTNode{
         
         */
 
-        void add(int v);
+        void add(int v) {
+            if(this->value < v) {
+                if(this->right == NULL) {
+                    this->right = new BSTNode(v);
+                } else this->right->add(v);
+            } else {
+                if(this->left == NULL) {
+                    this->left = new BSTNode(v);
+                } else this->left->add(v);
+            }
+        }
 };
 
 class BST{
@@ -62,5 +72,6 @@ class BST{
         }
 
         void insert(int i) {
+            root->add(i);
         }
 };
