@@ -202,8 +202,9 @@ void MDistor::checkSize() {
                 workers[host]->runCommand(db, BSON("collStats" << coll), result);
                 cout<<"result is  "<<result<<endl;
                 int dbSize = result.getField("size").Int();
+             
                 cout<<"range.Obj() : "<<range.Obj()<<endl;
-                dbConn->update(mdistor_ns, range.Obj(), BSON("$set" << BSON("size"<< dbSize)));
+                dbConn->update(mdistor_ns, BSON("key" << range.Obj()), BSON("$set" << BSON("size"<< dbSize)));
                 cout<<"Done the first one"<<endl;
                 if(dbSize > MDIS::MAX_CHUNK_SIZE){
                     BSONObj newHost = getAvailableWorker();
