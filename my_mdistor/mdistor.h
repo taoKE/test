@@ -22,11 +22,17 @@ namespace MDIS {
     //chunk info will be stored as a db collection in mdistor
     const static string CHUNKS = "mdistor.";
 
+    //in MB
+    static int MAX_CHUNK_SIZE = 32;
+
     class ChunkInfo {
         private:
             int range;
             string key;
             int current_max;
+
+            //Size in MB of the chunk on the storage server
+            int sizeMB;
 
         public:
             ChunkInfo(string k, int r) : key(k), range(r){}
@@ -62,7 +68,16 @@ namespace MDIS {
                 return key;
             }
 
+            int getSize() {
+                return sizeMB;
+            }
+
+            void setSize(int s) {
+                sizeMB = s;
+            }
+
     };
+
 
     class MDistor {
         private:
@@ -75,6 +90,17 @@ namespace MDIS {
             map<string, ChunkInfo> chunkInfos;
 
             void addChunk(string ns, int range);
+
+            //This background thread that will 
+            //check the size of the collections on mongo server 
+            //where the chunk reside. If the size exceeds the threads hold,
+            //mdistor will creat another chunk for the key so that future inserts
+            //will go to the right server for balance. 
+            shared_ptr<boost::thread> sizeChecker;
+
+            //This function is going to bind with a thread, 
+            //and check the size of collection periodically
+            void checkSize();
 
         public:
             MDistor(DBClientConnection * _dbConn): dbConn(_dbConn) {}

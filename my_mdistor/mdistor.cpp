@@ -26,19 +26,28 @@ void MDistor::insert(string  ns, BSONObj & p) {
 
     //cout << "Attempting to insert "<< ns << endl;
     worker->insert(ns, p);
+
+
+   checkSize();
 }
 
 void MDistor::addChunk(string ns, int range) {
     BSONObjBuilder chunk;
     //cout<<"Starting to set keys"<<endl;
-    string db = ns;
-    cout<<"addChunk: adding chunk for "<<db<<endl;
-    string chunkColl = MDIS::CHUNKS + db; 
+    size_t p_db = ns.find('.');
+    string db = ns.substr(0,p_db);
+    size_t p_coll = ns.find('.', p_db + 1);
+    string coll = ns.substr(p_db + 1, (p_coll - p_db - 1));
+    cout<<"addChunk: adding chunk for "<<ns<<endl;
+    string chunkColl = MDIS::CHUNKS + ns;
+    cout<<"db is "<<db<<"; coll is "<<coll<<endl; 
     map<string, ChunkInfo>::iterator info_iter = chunkInfos.find(ns);
     if(info_iter != chunkInfos.end()) {
         ChunkInfo &info = (*info_iter).second;
         chunk.append("type", "chunk");
         chunk.append("ns", ns);
+        chunk.append("collection", coll);
+        chunk.append("db", db);
         chunk.append("range", range);
 
         int start = info.getCurrentMax() + 1;
@@ -52,6 +61,7 @@ void MDistor::addChunk(string ns, int range) {
 
         chunk.append("worker", worker.getStringField("worker"));
         chunk.append("host" , worker.getStringField("host"));
+        chunk.append("size", 0);
 
         dbConn->ensureIndex(chunkColl, BSON("ns" << 1 << "key" <<  1), true);
         dbConn->insert(chunkColl, chunk.obj());
@@ -132,6 +142,8 @@ void MDistor::getWorkers() {
 void MDistor::init() {
 
     getWorkers();
+
+
 }
 
 /**
@@ -150,17 +162,63 @@ shared_ptr<DBClientConnection> MDistor::getWorkerConnection(string key, BSONObj 
         cout<<"trying to get host"<<endl;
         string host = cursor->next().getStringField("host");
         cout<<"host is "<<host<<endl;
+
         return workers[host];
     } else {
         ChunkInfo chunkInfo = chunkInfos[key];        
         cout<<"cursor doesn't have more, adding new chunk:"<<key<<endl;
         addChunk(key, chunkInfo.getRange());
+
+        //need to return the host here
     }
 
-    //TODO: need to add new chunks if there is no corresponding chunk
     return workers.begin()->second;
+
 }
 
+
+void MDistor::checkSize() {
+    int count = 0;
+    while((count++) < 1) {
+        map<string, ChunkInfo>::iterator chunks_it = chunkInfos.begin();
+
+        while(chunks_it != chunkInfos.end()){
+            cout<<"Something in chunkInfos"<<endl;
+            string mdistor_ns = MDIS::CHUNKS + chunks_it->first;
+            //query for all the chunks
+            auto_ptr<DBClientCursor> cursor = dbConn->query(mdistor_ns, BSONObj());
+            while(cursor->more()){
+                BSONObj b = cursor->next();
+                cout<<"b is "<<b<<endl;
+                string host = b.getStringField("host");
+                cout<<"Host"<<endl;
+                string db = b.getStringField("db");
+                cout<<"db"<<endl;
+                string coll = b.getStringField("collection");
+                cout<<"collection"<<endl;
+                mongo::BSONElement range = b.getField("key");
+                BSONObj result;
+                cout<<"Start to runCommand"<<endl;
+                workers[host]->runCommand(db, BSON("collStats" << coll), result);
+                cout<<"result is  "<<result<<endl;
+                int dbSize = result.getField("size").Int();
+                cout<<"range.Obj() : "<<range.Obj()<<endl;
+                dbConn->update(mdistor_ns, range.Obj(), BSON("$set" << BSON("size"<< dbSize)));
+                cout<<"Done the first one"<<endl;
+                if(dbSize > MDIS::MAX_CHUNK_SIZE){
+                    BSONObj newHost = getAvailableWorker();
+                    //TODO: is it possible to get rid of this query? 
+                    //since we have the cursor here.
+                    string newHostStr = newHost.getStringField("host");
+                    BSONObj _range = range.Obj();
+                    dbConn->update(mdistor_ns, _range, BSON("$set" << BSON("host" << newHostStr)));
+                }
+            }
+
+            chunks_it++;
+        }
+    }
+}
 
 };
 
