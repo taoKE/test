@@ -1,6 +1,7 @@
 #include "mdistor.h"
 #include <iostream>
 #include <mongo/bson/bson.h>
+#include <boost/thread.hpp>
 
 using namespace std;
 
@@ -27,8 +28,8 @@ void MDistor::insert(string  ns, BSONObj & p) {
     //cout << "Attempting to insert "<< ns << endl;
     worker->insert(ns, p);
 
-
-   checkSize();
+    //TODO: remove this, this may not be necessary
+    //MDistor::checkSize();
 }
 
 void MDistor::addChunk(string ns, int range) {
@@ -143,7 +144,9 @@ void MDistor::init() {
 
     getWorkers();
 
+    cout<<"MDistor init creating checkSize thread"<<endl;
 
+    sizeChecker = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&MDistor::checkSize, this)));  
 }
 
 /**
@@ -179,7 +182,7 @@ shared_ptr<DBClientConnection> MDistor::getWorkerConnection(string key, BSONObj 
 
 void MDistor::checkSize() {
     int count = 0;
-    while((count++) < 1) {
+    while((count) >  -1) {
         map<string, ChunkInfo>::iterator chunks_it = chunkInfos.begin();
 
         while(chunks_it != chunkInfos.end()){
@@ -200,10 +203,10 @@ void MDistor::checkSize() {
                 BSONObj result;
                 cout<<"Start to runCommand"<<endl;
                 workers[host]->runCommand(db, BSON("collStats" << coll), result);
-                cout<<"result is  "<<result<<endl;
+                //cout<<"result is  "<<result<<endl;
                 int dbSize = result.getField("size").Int();
-             
-                cout<<"range.Obj() : "<<range.Obj()<<endl;
+                cout<<"db size is-----"<<dbSize<<endl;
+                //cout<<"range.Obj() : "<<range.Obj()<<endl;
                 dbConn->update(mdistor_ns, BSON("key" << range.Obj()), BSON("$set" << BSON("size"<< dbSize)));
                 cout<<"Done the first one"<<endl;
                 if(dbSize > MDIS::MAX_CHUNK_SIZE){
@@ -218,6 +221,7 @@ void MDistor::checkSize() {
 
             chunks_it++;
         }
+        boost::this_thread::sleep(boost::posix_time::seconds(1));
     }
 }
 
