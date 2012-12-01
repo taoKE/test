@@ -6,10 +6,12 @@
 #include <boost/utility.hpp>
 #include <exception>
 #include <iostream>
+#include <boost/thread/mutex.hpp>
 
 using namespace mongo;
 using boost::shared_ptr;
 using namespace std;
+using boost::mutex;
 
 namespace MDIS {
 
@@ -88,6 +90,8 @@ namespace MDIS {
             static int tempCount; 
             
             map<string, ChunkInfo> chunkInfos;
+
+            boost::mutex distor_mutex;
 
             void addChunk(string ns, int range);
 

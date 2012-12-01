@@ -42,7 +42,13 @@ void MDistor::addChunk(string ns, int range) {
     cout<<"addChunk: adding chunk for "<<ns<<endl;
     string chunkColl = MDIS::CHUNKS + ns;
     cout<<"db is "<<db<<"; coll is "<<coll<<endl; 
-    map<string, ChunkInfo>::iterator info_iter = chunkInfos.find(ns);
+    
+    map<string, ChunkInfo>::iterator info_iter;
+    {
+        boost::mutex::scoped_lock ls(distor_mutex);
+        info_iter = chunkInfos.find(ns);
+    }
+
     if(info_iter != chunkInfos.end()) {
         ChunkInfo &info = (*info_iter).second;
         chunk.append("type", "chunk");
@@ -89,7 +95,10 @@ void MDistor::setKey(string ns, BSONObj & keyAndRange ) {
     ChunkInfo myChunk(ns, keyAndRange.getField("range").Int());
     myChunk.setCurrentMax(0);
 
-    chunkInfos[ns] = myChunk;
+    {
+        boost::mutex::scoped_lock ls(distor_mutex);
+        chunkInfos[ns] = myChunk;
+    }
 
     addChunk(ns, myChunk.getRange());
 
@@ -146,7 +155,7 @@ void MDistor::init() {
 
     cout<<"MDistor init creating checkSize thread"<<endl;
 
-    sizeChecker = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&MDistor::checkSize, this)));  
+    //sizeChecker = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&MDistor::checkSize, this)));  
 }
 
 /**
@@ -168,7 +177,11 @@ shared_ptr<DBClientConnection> MDistor::getWorkerConnection(string key, BSONObj 
 
         return workers[host];
     } else {
-        ChunkInfo chunkInfo = chunkInfos[key];        
+        ChunkInfo chunkInfo;
+        {
+            boost::mutex::scoped_lock sl(distor_mutex);
+            chunkInfo = chunkInfos[key];        
+        }
         cout<<"cursor doesn't have more, adding new chunk:"<<key<<endl;
         addChunk(key, chunkInfo.getRange());
 
@@ -183,7 +196,12 @@ shared_ptr<DBClientConnection> MDistor::getWorkerConnection(string key, BSONObj 
 void MDistor::checkSize() {
     int count = 0;
     while((count) >  -1) {
-        map<string, ChunkInfo>::iterator chunks_it = chunkInfos.begin();
+        map<string, ChunkInfo>::iterator chunks_it ; 
+
+        {
+            boost::mutex::scoped_lock sl(distor_mutex);
+            chunks_it = chunkInfos.begin();
+        
 
         while(chunks_it != chunkInfos.end()){
             cout<<"Something in chunkInfos"<<endl;
@@ -192,23 +210,18 @@ void MDistor::checkSize() {
             auto_ptr<DBClientCursor> cursor = dbConn->query(mdistor_ns, BSONObj());
             while(cursor->more()){
                 BSONObj b = cursor->next();
-                cout<<"b is "<<b<<endl;
                 string host = b.getStringField("host");
-                cout<<"Host"<<endl;
                 string db = b.getStringField("db");
-                cout<<"db"<<endl;
                 string coll = b.getStringField("collection");
-                cout<<"collection"<<endl;
                 mongo::BSONElement range = b.getField("key");
                 BSONObj result;
-                cout<<"Start to runCommand"<<endl;
+                //cout<<"Start to runCommand"<<endl;
                 workers[host]->runCommand(db, BSON("collStats" << coll), result);
                 //cout<<"result is  "<<result<<endl;
                 int dbSize = result.getField("size").Int();
                 cout<<"db size is-----"<<dbSize<<endl;
                 //cout<<"range.Obj() : "<<range.Obj()<<endl;
                 dbConn->update(mdistor_ns, BSON("key" << range.Obj()), BSON("$set" << BSON("size"<< dbSize)));
-                cout<<"Done the first one"<<endl;
                 if(dbSize > MDIS::MAX_CHUNK_SIZE){
                     BSONObj newHost = getAvailableWorker();
                     //TODO: is it possible to get rid of this query? 
@@ -220,6 +233,7 @@ void MDistor::checkSize() {
             }
 
             chunks_it++;
+        }
         }
         boost::this_thread::sleep(boost::posix_time::seconds(1));
     }
